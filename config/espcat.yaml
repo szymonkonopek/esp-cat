@@ -1,0 +1,136 @@
+esphome:
+  name: esp-cat
+  friendly_name: esp-cat
+  on_loop:
+    then:
+      - stepper.report_position:
+          id: my_stepper
+          position: 0
+
+globals:
+  - id: motor_running
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+logger:
+
+api:
+  encryption:
+    key: !secret espcat_api_key
+
+ota:
+  - platform: esphome
+    password: !secret espcat_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  use_address: !secret espcat_ip
+
+  ap:
+    ssid: "Esp-Cat Fallback Hotspot"
+    password: !secret espcat_ap_password
+
+captive_portal:
+
+stepper:
+  - platform: uln2003
+    id: my_stepper
+    pin_a: 25
+    pin_b: 26
+    pin_c: 27
+    pin_d: 14
+    max_speed: 250 steps/s
+    sleep_when_done: true
+
+script:
+  - id: start_motor
+    then:
+      - lambda: 'id(motor_running) = true;'
+      - stepper.set_target:
+          id: my_stepper
+          target: 10
+  - id: stop_motor
+    then:
+      - lambda: 'id(motor_running) = false;'
+      - stepper.set_target:
+          id: my_stepper
+          target: 0
+  - id: unclog_motor
+    then:
+      - repeat:
+          count: 10
+          then:
+            - stepper.set_target:
+                id: my_stepper
+                target: 400
+            - delay: 4s
+            - stepper.set_target:
+                id: my_stepper
+                target: -200
+            - delay: 2s
+      - stepper.set_target:
+          id: my_stepper
+          target: 0
+  - id: move_forward
+    then:
+      - stepper.set_target:
+          id: my_stepper
+          target: 500
+      - delay: 2s
+      - stepper.set_target:
+          id: my_stepper
+          target: 0
+  - id: move_backward
+    then:
+      - stepper.set_target:
+          id: my_stepper
+          target: -500
+      - delay: 2s
+      - stepper.set_target:
+          id: my_stepper
+          target: 0
+
+switch:
+  - platform: template
+    name: "Rotation"
+    id: rotation_switch
+    icon: "mdi:rotate-360"
+    lambda: |-
+      return id(motor_running);
+    turn_on_action:
+      - script.execute: start_motor
+    turn_off_action:
+      - script.execute: stop_motor
+  - platform: template
+    name: "STOP"
+    id: rotation_stop
+    lambda: |-
+      return id(motor_running);
+    turn_on_action:
+      - script.execute: stop_motor
+    turn_off_action:
+      - script.execute: stop_motor
+
+button:
+  - platform: template
+    name: "Cat dispenser"
+    on_press:
+      then:
+        - script.execute: unclog_motor
+  - platform: template
+    name: "Move Forward"
+    on_press:
+      then:
+        - script.execute: move_forward
+  - platform: template
+    name: "Move Backward"
+    on_press:
+      then:
+        - script.execute: move_backward

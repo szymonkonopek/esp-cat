@@ -1,0 +1,119 @@
+esphome:
+  name: esp-32-led
+  platform: ESP32
+  board: esp32dev
+
+esp32_ble_tracker:
+
+logger:
+
+api:
+
+ota:
+  - platform: esphome
+    password: !secret espled_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  ap:
+    ssid: "Esp-32-Led Fallback Hotspot"
+    password: !secret espled_ap_password
+
+captive_portal:
+
+# uzyte piny: 17, 19, 18, 23
+
+output:
+  - platform: ledc
+    id: 'p1'
+    pin: 17
+  - platform: ledc
+    id: 'p2'
+    pin: 19
+  - platform: ledc
+    id: 'p3'
+    pin: 18
+
+light:
+  - platform: monochromatic
+    output: 'p1'
+    name: 'USB 1'
+    effects:
+      - pulse:
+      - pulse:
+          name: 'Fast Pulse'
+          transition_length: 0.5s
+          update_interval: 0.5s
+      - pulse:
+          name: 'Slow Pulse'
+          update_interval: 2s
+
+  - platform: monochromatic
+    output: 'p2'
+    name: 'USB 2'
+    effects:
+      - pulse:
+      - pulse:
+          name: 'Fast Pulse'
+          transition_length: 0.5s
+          update_interval: 0.5s
+      - pulse:
+          name: 'Slow Pulse'
+          update_interval: 2s
+
+  - platform: monochromatic
+    output: 'p3'
+    name: 'USB 3'
+    default_transition_length: 0s
+    effects:
+      - pulse:
+      - pulse:
+          name: 'Fast Pulse'
+          transition_length: 0.5s
+          update_interval: 0.5s
+      - pulse:
+          name: 'Slow Pulse'
+          update_interval: 2s
+
+one_wire:
+  - platform: gpio
+    pin: 23
+    id: ow_bus
+
+sensor:
+  - platform: dallas_temp
+    address: 0xF9021616BDA2EE28
+    name: 'Salon Temp'
+  - platform: wifi_signal
+    name: 'WiFi Signal Sensor'
+    update_interval: 60s
+  - platform: xiaomi_lywsd03mmc
+    mac_address: 'A4:C1:38:45:63:83'
+    bindkey: !secret xiaomi_bindkey
+    temperature:
+      name: 'MI Temperature'
+    humidity:
+      name: 'MI Humidity'
+    battery_level:
+      name: 'MI Battery Level'
+
+switch:
+  - platform: gpio
+    pin: 02
+    id: relay
+    name: 'Gate Remote'
+    icon: 'mdi:gate'
+    on_turn_on:
+      - delay: 1000ms
+      - switch.turn_off: relay
+
+esp32_touch:
+  setup_mode: false
+
+binary_sensor:
+  - platform: esp32_touch
+    name: 'ESP32 Touch Pad GPIO27'
+    pin: GPIO27
+    threshold: 1400

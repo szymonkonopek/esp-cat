@@ -1,0 +1,9 @@
+services:
+  esphome:
+    image: ghcr.io/esphome/esphome
+    container_name: esphome
+    volumes:
+      - ./config:/config
+    ports:
+      - "6052:6052"
+    restart: unless-stopped

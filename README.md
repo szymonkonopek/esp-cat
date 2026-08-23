@@ -86,9 +86,17 @@ Otworz **http://localhost:6052** w przegladarce.
 
 ### 3. Wprowadz zmiany i wgraj
 
-Edytuj odpowiedni plik konfiguracyjny, nastepnie w dashboardzie kliknij **Install** > **Wirelessly** przy wybranym urzadzeniu.
+Edytuj odpowiedni plik konfiguracyjny, nastepnie uruchom:
 
-Kompilacja i wgranie trwa ok. 1-2 minuty. Po zakonczeniu mozna zatrzymac Dashboard — urzadzenia dzialaja samodzielnie:
+```bash
+# ESP-Cat (karmnik)
+docker exec -it esphome esphome run /config/espcat.yaml
+
+# ESP-LED (oswietlenie)
+docker exec -it esphome esphome run /config/esp-led.yaml
+```
+
+Kompilacja i wgranie OTA trwa ok. 1-2 minuty, logi widac na zywo w terminalu. Po zakonczeniu mozna zatrzymac Dashboard — urzadzenia dzialaja samodzielnie:
 
 ```bash
 docker compose down
